@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 
 import colors from '@/constants/colors';
 import { CATEGORIES, EXPERIENCES, type Experience } from '@/constants/experiences';
@@ -113,12 +114,16 @@ interface ExperienceCardProps {
 }
 
 function ExperienceCard({ experience }: ExperienceCardProps) {
+  const router = useRouter();
   const imageSource = experience.images && experience.images.length > 0
     ? experience.images[0]
     : { uri: experience.image };
 
   return (
-    <Pressable style={styles.card}>
+    <Pressable 
+      style={styles.card}
+      onPress={() => router.push(`/experience/${experience.id}`)}
+    >
       <Image
         source={imageSource}
         style={styles.cardImage}
@@ -143,12 +148,16 @@ function ExperienceCard({ experience }: ExperienceCardProps) {
 }
 
 function TrendingCard({ experience }: ExperienceCardProps) {
+  const router = useRouter();
   const imageSource = experience.images && experience.images.length > 0
     ? experience.images[0]
     : { uri: experience.image };
 
   return (
-    <Pressable style={styles.trendingCard}>
+    <Pressable 
+      style={styles.trendingCard}
+      onPress={() => router.push(`/experience/${experience.id}`)}
+    >
       <Image
         source={imageSource}
         style={styles.trendingImage}
