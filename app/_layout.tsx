@@ -4,6 +4,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,6 +17,9 @@ function RootLayoutNav() {
       <StatusBar style="light" />
       <Stack screenOptions={{ headerBackTitle: 'Back' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
+        <Stack.Screen name="saved-experiences" options={{ headerShown: false }} />
       </Stack>
     </>
   );
@@ -28,9 +33,13 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <RootLayoutNav />
-      </GestureHandlerRootView>
+      <AuthProvider>
+        <FavoritesProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </FavoritesProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

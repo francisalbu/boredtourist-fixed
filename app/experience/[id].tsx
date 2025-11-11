@@ -11,19 +11,24 @@ import {
   Star,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, Dimensions, FlatList, Linking, Alert } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, Dimensions, FlatList, Linking, Alert, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 import colors from '@/constants/colors';
 import { EXPERIENCES } from '@/constants/experiences';
+import { useFavorites } from '@/contexts/FavoritesContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ExperienceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const [bookmarked, setBookmarked] = useState<boolean>(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showAIChat, setShowAIChat] = useState(false);
+  
+  const { toggleSave, isSaved } = useFavorites();
+  const { isAuthenticated } = useAuth();
 
   const experience = EXPERIENCES.find((exp) => exp.id === id);
 
@@ -34,6 +39,51 @@ export default function ExperienceDetailScreen() {
       </View>
     );
   }
+
+  const saved = isSaved(experience.id);
+
+  const handleSave = async () => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Sign In Required',
+        'Please sign in to save experiences',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign In', onPress: () => router.push('/auth/login' as any) }
+        ]
+      );
+      return;
+    }
+    await toggleSave(experience.id);
+  };
+
+  const handleShare = async () => {
+    try {
+      const shareMessage = `🎉 ${experience.title}
+
+📍 ${experience.location}
+⭐ ${experience.rating} (${experience.reviewCount} reviews)
+⏱️ ${experience.duration}
+💰 ${experience.currency}${experience.price}/person
+
+${experience.description}
+
+Book this amazing experience on BoredTourist!`;
+
+      await Share.share({
+        message: shareMessage,
+        title: experience.title,
+      });
+    } catch (error: any) {
+      console.error('Error sharing:', error.message);
+    }
+  };
+
+  const handleAIChat = () => {
+    setShowAIChat(true);
+    // TODO: Implement AI chat modal
+    Alert.alert('AI Chat', 'AI chat feature coming soon!');
+  };
 
   const handleOpenMap = async () => {
     const googleMapsUrl = experience.id === '0' 
@@ -159,20 +209,20 @@ export default function ExperienceDetailScreen() {
                 <ArrowLeft size={24} color={colors.dark.text} />
               </Pressable>
               <View style={styles.topRightActions}>
-                <Pressable style={styles.iconButton}>
+                <Pressable style={styles.iconButton} onPress={handleAIChat}>
                   <MessageCircle size={24} color={colors.dark.text} />
                 </Pressable>
-                <Pressable style={styles.iconButton}>
+                <Pressable style={styles.iconButton} onPress={handleShare}>
                   <Share2 size={24} color={colors.dark.text} />
                 </Pressable>
                 <Pressable
                   style={styles.iconButton}
-                  onPress={() => setBookmarked(!bookmarked)}
+                  onPress={handleSave}
                 >
                   <Bookmark
                     size={24}
-                    color={bookmarked ? colors.dark.accent : colors.dark.text}
-                    fill={bookmarked ? colors.dark.accent : 'transparent'}
+                    color={saved ? colors.dark.accent : colors.dark.text}
+                    fill={saved ? colors.dark.accent : 'transparent'}
                   />
                 </Pressable>
               </View>

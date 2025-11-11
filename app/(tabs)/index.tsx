@@ -24,6 +24,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import colors from '@/constants/colors';
 import { EXPERIENCES, type Experience } from '@/constants/experiences';
+import { useFavorites } from '@/contexts/FavoritesContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -70,15 +72,27 @@ export default function FeedScreen() {
     }
   }, [selectedFilter]);
 
+  const { toggleSave, isSaved } = useFavorites();
+  const { isAuthenticated } = useAuth();
+
+  const handleSave = async (experienceId: string) => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    await toggleSave(experienceId);
+  };
+
   const renderItem = ({ item, index }: { item: Experience; index: number }) => {
     return (
       <View style={styles.itemContainer}>
         <ExperienceCard
           experience={item}
           isActive={index === currentIndex}
+          isSaved={isSaved(item.id)}
           onAIChatPress={() => setShowAIChat(true)}
           onReviewsPress={() => router.push(`/reviews/${item.id}`)}
-          onSavePress={() => setShowAuthModal(true)}
+          onSavePress={() => handleSave(item.id)}
         />
       </View>
     );
@@ -171,13 +185,13 @@ export default function FeedScreen() {
 interface ExperienceCardProps {
   experience: Experience;
   isActive: boolean;
+  isSaved: boolean;
   onAIChatPress: () => void;
   onReviewsPress: () => void;
   onSavePress: () => void;
 }
 
-function ExperienceCard({ experience, isActive, onAIChatPress, onReviewsPress, onSavePress }: ExperienceCardProps) {
-  const [bookmarked, setBookmarked] = useState<boolean>(false);
+function ExperienceCard({ experience, isActive, isSaved, onAIChatPress, onReviewsPress, onSavePress }: ExperienceCardProps) {
   const insets = useSafeAreaInsets();
   const videoRef = useRef<Video>(null);
 
@@ -310,10 +324,10 @@ Book this amazing experience on BoredTourist!`;
             >
               <Bookmark
                 size={28}
-                color={bookmarked ? colors.dark.accent : colors.dark.text}
-                fill={bookmarked ? colors.dark.accent : 'transparent'}
+                color={isSaved ? colors.dark.accent : colors.dark.text}
+                fill={isSaved ? colors.dark.accent : 'transparent'}
               />
-              <Text style={styles.sideActionLabel}>Save</Text>
+              <Text style={styles.sideActionLabel}>{isSaved ? 'Saved' : 'Save'}</Text>
             </Pressable>
           </View>
         </View>
